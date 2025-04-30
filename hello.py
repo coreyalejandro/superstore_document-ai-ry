@@ -6,6 +6,20 @@ from preswald import text, connect, plotly, table, sidebar, get_df
 # Initialize Preswald
 connect()
 
+# Define a rich, deep color palette
+COLOR_PALETTE = [
+    "#1E3D59",  # Deep Navy Blue
+    "#FF6B6B",  # Rich Coral Red
+    "#4B8F8C",  # Deep Teal
+    "#7B2CBF",  # Rich Purple
+    "#FFC13B",  # Deep Gold
+    "#2D6A4F",  # Forest Green
+    "#9E2A2B",  # Deep Wine Red
+    "#335C67",  # Steel Blue
+    "#B68D40",  # Rich Bronze
+    "#540B0E"   # Deep Burgundy
+]
+
 # --- Sidebar ---
 sidebar(text("# Superstore Saga"))
 sidebar(text("A Data Visualization Documentary"))
@@ -46,7 +60,8 @@ text("# Act 1: Understanding Our Core Metrics")
 text("## The Distribution of Sales")
 fig_sales = px.histogram(df, x="Sales", nbins=30,
                         title="Distribution of Sales",
-                        labels={"Sales": "Sales ($)", "count": "Frequency"})
+                        labels={"Sales": "Sales ($)", "count": "Frequency"},
+                        color_discrete_sequence=COLOR_PALETTE)
 fig_sales.update_layout(template="plotly_white")
 plotly(fig_sales)
 
@@ -62,7 +77,8 @@ text("""
 text("## The Story of Profits")
 fig_profit = px.histogram(df, x="Profit", nbins=30,
                          title="Distribution of Profits",
-                         labels={"Profit": "Profit ($)", "count": "Frequency"})
+                         labels={"Profit": "Profit ($)", "count": "Frequency"},
+                         color_discrete_sequence=COLOR_PALETTE)
 fig_profit.update_layout(template="plotly_white")
 plotly(fig_profit)
 
@@ -79,7 +95,9 @@ text("## Product Categories: The Main Characters")
 fig_category = px.bar(df.groupby("Category").size().reset_index(),
                      x="Category", y=0,
                      title="Product Distribution Across Categories",
-                     labels={"0": "Number of Products", "Category": "Category"})
+                     labels={"0": "Number of Products", "Category": "Category"},
+                     color="Category",
+                     color_discrete_sequence=COLOR_PALETTE)
 fig_category.update_layout(template="plotly_white")
 plotly(fig_category)
 
@@ -98,7 +116,9 @@ text("# Act 2: Exploring Relationships")
 text("## The Sales-Profit Dynamic")
 fig_sales_profit = px.scatter(df, x="Sales", y="Profit",
                              title="Sales vs Profit Relationship",
-                             labels={"Sales": "Sales ($)", "Profit": "Profit ($)"})
+                             labels={"Sales": "Sales ($)", "Profit": "Profit ($)"},
+                             color="Category",
+                             color_discrete_sequence=COLOR_PALETTE)
 fig_sales_profit.update_layout(template="plotly_white")
 plotly(fig_sales_profit)
 
@@ -114,7 +134,9 @@ text("""
 text("## Regional Performance Analysis")
 fig_region = px.box(df, x="Region", y="Profit Margin",
                     title="Profit Margins by Region",
-                    labels={"Region": "Region", "Profit_Margin": "Profit Margin"})
+                    labels={"Region": "Region", "Profit_Margin": "Profit Margin"},
+                    color="Region",
+                    color_discrete_sequence=COLOR_PALETTE)
 fig_region.update_layout(template="plotly_white")
 plotly(fig_region)
 
@@ -144,7 +166,8 @@ fig_category_performance = px.scatter(category_metrics,
                                         "Sales": "Total Sales ($)",
                                         "Profit": "Total Profit ($)",
                                         "Absolute Profit": "Absolute Profit ($)"
-                                    })
+                                    },
+                                    color_discrete_sequence=COLOR_PALETTE)
 fig_category_performance.update_layout(template="plotly_white")
 plotly(fig_category_performance)
 
@@ -161,19 +184,33 @@ text("# Act 3: The Complex Interplay")
 
 # Sales, Profit, and Category Over Time
 text("## Temporal Performance by Category")
-fig_temporal = px.line(df.groupby(["Order Date", "Category"]).agg({
-    "Sales": "sum"
-}).reset_index(),
+# Resample data monthly and calculate mean sales by category
+temporal_data = df.groupby([pd.Grouper(key='Order Date', freq='M'), 'Category'])['Sales'].sum().reset_index()
+
+fig_temporal = px.line(temporal_data,
                       x="Order Date",
                       y="Sales",
                       color="Category",
-                      title="Sales Trends by Category",
+                      title="Monthly Sales Trends by Category",
                       labels={
-                          "Order Date": "Date",
-                          "Sales": "Sales ($)",
+                          "Order Date": "Month",
+                          "Sales": "Total Sales ($)",
                           "Category": "Category"
-                      })
-fig_temporal.update_layout(template="plotly_white")
+                      },
+                      color_discrete_sequence=COLOR_PALETTE)
+
+# Improve the layout
+fig_temporal.update_layout(
+    template="plotly_white",
+    xaxis_title="Month",
+    yaxis_title="Total Sales ($)",
+    legend_title="Category",
+    hovermode='x unified'
+)
+
+# Add markers to make the lines more visible
+fig_temporal.update_traces(mode='lines+markers', marker=dict(size=6))
+
 plotly(fig_temporal)
 
 text("""
@@ -200,7 +237,8 @@ fig_matrix = px.scatter(df,
                            "Sales": "Sales ($)",
                            "Profit_Margin": "Profit Margin",
                            "Absolute Profit": "Absolute Profit ($)"
-                       })
+                       },
+                       color_discrete_sequence=COLOR_PALETTE)
 fig_matrix.update_layout(template="plotly_white")
 plotly(fig_matrix)
 
