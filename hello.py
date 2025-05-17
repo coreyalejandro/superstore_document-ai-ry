@@ -20,6 +20,15 @@ COLOR_PALETTE = [
     "#540B0E"   # Deep Burgundy
 ]
 
+# Utility: Convert all datetime columns to string for serialization
+
+def stringify_dates(df):
+    df = df.copy()
+    for col in df.columns:
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].astype(str)
+    return df
+
 # --- Sidebar ---
 sidebar(text("# Superstore Saga"))
 sidebar(text("A Data Visualization Documentary"))
@@ -186,32 +195,18 @@ text("# Act 3: The Complex Interplay")
 text("## Temporal Performance by Category")
 # Resample data monthly and calculate mean sales by category
 temporal_data = df.groupby([pd.Grouper(key='Order Date', freq='M'), 'Category'])['Sales'].sum().reset_index()
-
-fig_temporal = px.line(temporal_data,
-                      x="Order Date",
-                      y="Sales",
-                      color="Category",
-                      title="Monthly Sales Trends by Category",
-                      labels={
-                          "Order Date": "Month",
-                          "Sales": "Total Sales ($)",
-                          "Category": "Category"
-                      },
-                      color_discrete_sequence=COLOR_PALETTE)
-
-# Improve the layout
-fig_temporal.update_layout(
-    template="plotly_white",
-    xaxis_title="Month",
-    yaxis_title="Total Sales ($)",
-    legend_title="Category",
-    hovermode='x unified'
-)
-
-# Add markers to make the lines more visible
-fig_temporal.update_traces(mode='lines+markers', marker=dict(size=6))
-
-plotly(fig_temporal)
+# Convert datetime columns to string for plotly serialization
+plotly(px.line(stringify_dates(temporal_data),
+               x="Order Date",
+               y="Sales",
+               color="Category",
+               title="Monthly Sales Trends by Category",
+               labels={
+                   "Order Date": "Month",
+                   "Sales": "Total Sales ($)",
+                   "Category": "Category"
+               },
+               color_discrete_sequence=COLOR_PALETTE))
 
 text("""
 **Key Insights:**
@@ -283,4 +278,4 @@ Remember: Every data point tells a story. Your actions write the next chapter.
 """)
 
 # Show the data
-table(df)
+table(stringify_dates(df))

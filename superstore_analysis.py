@@ -1,8 +1,7 @@
 import pandas as pd
 import plotly.express as px
-from preswald import text, connect, plotly, column, row, table, sidebar
+from preswald import text, connect, plotly, sidebar
 
-# Initialize Preswald
 connect()
 
 # --- Sidebar ---
